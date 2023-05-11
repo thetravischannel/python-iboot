@@ -39,10 +39,9 @@ class DXPCommand(object):
 
         if not self.DESCRIPTOR:
             raise Exception("'DESCRIPTOR' type not specified for class")
-
         return HEADER_STRUCT.pack(COMMAND_MAP[self.COMMAND],
-                                  self.interface.username,
-                                  self.interface.password,
+                                  bytes(self.interface.username, 'utf-8'),
+                                  bytes(self.interface.password, 'utf-8'),
                                   self.DESCRIPTOR_MAP[self.DESCRIPTOR],
                                   0,
                                   self.interface.get_seq_num())
@@ -135,7 +134,7 @@ class ChangeRelaysCommand(RelayCommand):
 
         self.interface.logger.debug(self.relay_state_dict)
 
-        for relay in xrange(32):
+        for relay in range(32):
             if (relay + 1) not in self.relay_state_dict:
                 state_list.append(self.STATE_MAP['NO_CHANGE'])
             else:
@@ -159,7 +158,7 @@ class GetRelaysRequest(IOCommand):
             return None
 
         self.interface.increment_seq_num()
-        return [True if ord(relay_status) == 1 else False
+        return [True if relay_status == 1 else False
                 for relay_status in response]
 
 
@@ -210,7 +209,7 @@ class iBootInterface(object):
             return False
 
         try:
-            self.socket.sendall(HELLO_STR)
+            self.socket.sendall(bytes(HELLO_STR, 'utf-8))
             return self._get_initial_seq_num()
         except socket.error:
             self.logger.error('Socket error')
@@ -253,7 +252,7 @@ class iBootInterface(object):
         """
         self.connect()
 
-        for relay, new_state in relay_state_dict.items():
+        for relay, new_state in list(relay_state_dict.items()):
             request = ChangeRelayCommand(self, relay, new_state)
 
             try:
